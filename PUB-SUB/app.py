@@ -157,11 +157,12 @@ def start_consumers():
 import signal
 import sys
 
-def handle_shutdown_signal(signal, frame):
+def handle_shutdown_signal(sig, frame):
     """Handle shutdown signals like Ctrl+C."""
     print("Application is shutting down...")
-    # socketio.stop()  # Stop the SocketIO server gracefully
-    asyncio.run(manager.close())  # Close any asynchronous resources like Elasticsearch
+    loop = asyncio.new_event_loop()
+    loop.run_until_complete(manager.close())
+    loop.close()
     sys.exit(0)
 
 # Register the signal handler for SIGINT (Ctrl+C)

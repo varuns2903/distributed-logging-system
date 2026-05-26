@@ -1,6 +1,7 @@
 from elasticsearch import AsyncElasticsearch
 from datetime import datetime, timedelta, timezone
 import os
+import time
 
 
 class NodeStatusManager:
@@ -10,15 +11,10 @@ class NodeStatusManager:
 
     def __init__(self, es_host: str = None, index_name: str = "node_status"):
         es_host = es_host or os.environ.get('ES_HOST', 'http://localhost:9200')
-        """
-        Initialize the NodeStatusManager.
-
-        Parameters:
-            es_host (str): The Elasticsearch host URL.
-            index_name (str): The Elasticsearch index name.
-        """
         self.es = AsyncElasticsearch(es_host)
         self.index_name = index_name
+        self._last_error_logged = 0
+        self._error_cooldown = 30  # seconds between repeated connection error logs
 
     async def upsert_node_status(self, node_id: str, status: str):
         """
@@ -60,7 +56,12 @@ class NodeStatusManager:
             nodes = {hit["_id"]: hit["_source"] for hit in response["hits"]["hits"]}
             return nodes
         except Exception as e:
-            print(f"Error retrieving all nodes: {e}")
+            if '404' in str(e) or 'index_not_found' in str(e):
+                return {}
+            now = time.time()
+            if now - self._last_error_logged >= self._error_cooldown:
+                print(f"Error retrieving all nodes: {e}")
+                self._last_error_logged = now
             return {}
 
     async def get_all_nodes(self):
@@ -75,7 +76,12 @@ class NodeStatusManager:
             nodes = {hit["_id"]: hit["_source"] for hit in response["hits"]["hits"]}
             return nodes
         except Exception as e:
-            print(f"Error retrieving all nodes: {e}")
+            if '404' in str(e) or 'index_not_found' in str(e):
+                return {}
+            now = time.time()
+            if now - self._last_error_logged >= self._error_cooldown:
+                print(f"Error retrieving all nodes: {e}")
+                self._last_error_logged = now
             return {}
 
     async def close(self):

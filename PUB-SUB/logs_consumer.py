@@ -27,6 +27,11 @@ class LogConsumer:
                 print(f"Error flushing logs to Elasticsearch: {e}")
         
 
+    async def _periodic_flush(self):
+        while True:
+            await asyncio.sleep(self.buffer_flush_interval)
+            await self.flush_logs_to_elasticsearch()
+
     async def start_consumer(self):
         """Start the Kafka consumer"""
         await self.es_storage._create_index_template()
@@ -37,6 +42,7 @@ class LogConsumer:
             auto_offset_reset=self.auto_offset_reset
         )
         await self.consumer.start()
+        asyncio.create_task(self._periodic_flush())
         print("Logs consumer started... Press Ctrl+C to stop.")
         
     async def stop_consumer(self):

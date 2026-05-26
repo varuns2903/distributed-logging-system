@@ -4,4 +4,4 @@ cryptography
 aiokafka
 fluent-logger
 termcolor
-elasticsearch
+elasticsearch>=8,<9

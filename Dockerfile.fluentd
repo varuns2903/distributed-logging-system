@@ -1,6 +1,7 @@
 FROM fluent/fluentd:v1.16-debian-1
 
 USER root
-RUN gem install fluent-plugin-kafka --no-document
+RUN gem install fluent-plugin-kafka --no-document && \
+    mkdir -p /var/log/fluentd && chown fluent:fluent /var/log/fluentd
 
 USER fluent

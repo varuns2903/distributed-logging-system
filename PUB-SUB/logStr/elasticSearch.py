@@ -20,36 +20,37 @@ class ElasticsearchLogStorage:
         """
         template = {
             "index_patterns": [f"{self.index_prefix}-*"],
-            "settings": {
-                "number_of_shards": 3,
-                "number_of_replicas": 1,
-                "max_ngram_diff": 50
-            },
-            "mappings": {
-                "properties": {
-                    "node_id": {"type": "keyword"},
-                    "message_type": {"type": "keyword"},
-                    "service_name": {"type": "keyword"},
-                    "timestamp": {"type": "date"},
-                    "log_id": {"type": "keyword"},
-                    "log_level": {"type": "keyword"},
-                    "message": {"type": "text"},
-                    "response_time_ms": {"type": "integer"},
-                    "threshold_limit_ms": {"type": "integer"},
-                    "registration_details": {"type": "object", "enabled": True},
-                    "error_details": {
-                        "type": "object",
-                        "properties": {
-                            "error_code": {"type": "keyword"},
-                            "error_message": {"type": "text"}
+            "template": {
+                "settings": {
+                    "number_of_shards": 3,
+                    "number_of_replicas": 1,
+                    "max_ngram_diff": 50
+                },
+                "mappings": {
+                    "properties": {
+                        "node_id": {"type": "keyword"},
+                        "message_type": {"type": "keyword"},
+                        "service_name": {"type": "keyword"},
+                        "timestamp": {"type": "date"},
+                        "log_id": {"type": "keyword"},
+                        "log_level": {"type": "keyword"},
+                        "message": {"type": "text"},
+                        "response_time_ms": {"type": "integer"},
+                        "threshold_limit_ms": {"type": "integer"},
+                        "registration_details": {"type": "object", "enabled": True},
+                        "error_details": {
+                            "type": "object",
+                            "properties": {
+                                "error_code": {"type": "keyword"},
+                                "error_message": {"type": "text"}
+                            }
                         }
                     }
                 }
             }
         }
         try:
-            # Create or update the template
-            await self.es_client.indices.put_template(
+            await self.es_client.indices.put_index_template(
                 name=f"{self.index_prefix}_template",
                 body=template
             )
@@ -58,8 +59,7 @@ class ElasticsearchLogStorage:
             print(f"Error creating/updating index template: {e}")
 
     def _get_daily_index_name(self):
-        """Generate daily index name."""
-        return f"{self.index_prefix}"
+        return f"{self.index_prefix}-{datetime.utcnow().strftime('%Y.%m.%d')}"
 
     async def store_logs(self, logs):
         """
@@ -72,26 +72,16 @@ class ElasticsearchLogStorage:
                 logs = [logs]
 
             index_name = self._get_daily_index_name()
-            
-            # Ensure all required indices are created before bulk indexing
-            unique_indices = set()
-            for log in logs:
-                current_index = f"{index_name}-{log['node_id']}" if 'node_id' in log else index_name
-                unique_indices.add(current_index)
 
-            # Create missing indices asynchronously
-            for current_index in unique_indices:
-                if not await self.es_client.indices.exists(index=current_index):
-                    await self.es_client.indices.create(index=current_index)
+            if not await self.es_client.indices.exists(index=index_name):
+                await self.es_client.indices.create(index=index_name)
 
-            # Prepare logs for bulk indexing
             def log_generator():
                 for log in logs:
-                    current_index = f"{index_name}-{log['node_id']}" if 'node_id' in log else index_name
                     if 'log_id' not in log:
                         log['log_id'] = str(uuid.uuid4())
                     yield {
-                        "_index": current_index,
+                        "_index": index_name,
                         "_id": log['log_id'],
                         "_source": log
                     }
