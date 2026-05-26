@@ -33,8 +33,8 @@ Microservices → Log Accumulator → Fluentd → Kafka → PUB-SUB consumer →
 **Requires**: Docker, Docker Compose
 
 ```bash
-git clone https://github.com/Cloud-Computing-Big-Data/RR-Team-48-distributed-logging-system.git
-cd RR-Team-48-distributed-logging-system
+git clone git@github.com:varuns2903/distributed-logging-system.git
+cd distributed-logging-system
 docker compose up --build
 ```
 
