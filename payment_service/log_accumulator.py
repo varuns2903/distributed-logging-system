@@ -1,7 +1,10 @@
-import json                              
+import json
+import os
 from fluent import sender
 from fluent import event
-sender.setup('fluentd.payment_service', host='localhost', port=9880)
+sender.setup('fluentd.payment_service',
+             host=os.environ.get('FLUENTD_HOST', 'localhost'),
+             port=int(os.environ.get('FLUENTD_PORT', 9880)))
 class Logger1:
     def __init__(self, reg=None, logs=None, heartbeat=None):
         self.logs = logs

@@ -1,11 +1,14 @@
 import asyncio
 import json
+import os
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
 from logs_consumer import LogConsumer
 from heartBeat_consumer import Heartbeat
 from datetime import datetime, timedelta, timezone
 from logStr.nodeStatusManager import NodeStatusManager
+
+KAFKA_BROKERS = os.environ.get('KAFKA_BROKERS', 'localhost:9092')
 
 # Initialize Flask app and SocketIO
 app = Flask(__name__)
@@ -15,7 +18,7 @@ manager = NodeStatusManager()  # Initialize NodeStatusManager
 # Initialize consumers
 log_consumer = LogConsumer(
     topic='logs',
-    bootstrap_servers='localhost:9092',  # Kafka server
+    bootstrap_servers=KAFKA_BROKERS,
     group_id='logs-consumer-group',
     offset_reset='latest'
 )

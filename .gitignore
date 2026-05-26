@@ -1,1 +1,13 @@
 __pycache__/
+*.key
+*.pkl
+*.pyc
+*.pyo
+.env
+.env.*
+*.log
+venv/
+.venv/
+env/
+.env/
+

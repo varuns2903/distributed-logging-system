@@ -2,10 +2,12 @@ from elasticsearch import AsyncElasticsearch
 from elasticsearch.helpers import async_bulk
 from datetime import datetime
 import uuid
+import os
 
 
 class ElasticsearchLogStorage:
-    def __init__(self, hosts=['http://localhost:9200'], index_prefix='distributed_logs'):
+    def __init__(self, hosts=None, index_prefix='distributed_logs'):
+        hosts = hosts or [os.environ.get('ES_HOST', 'http://localhost:9200')]
         """
         Initialize asynchronous Elasticsearch connection with flexible configuration.
         """

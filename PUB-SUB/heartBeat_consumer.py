@@ -2,8 +2,11 @@ from aiokafka import AIOKafkaConsumer
 from datetime import datetime
 import json
 import asyncio
+import os
 from logStr.elasticSearch import ElasticsearchLogStorage
-from logStr.nodeStatusManager import NodeStatusManager  # Import your NodeStatusManager class
+from logStr.nodeStatusManager import NodeStatusManager
+
+KAFKA_BROKERS = os.environ.get('KAFKA_BROKERS', 'localhost:9092')
 
 EXPECTED_INTERVAL = 5  # Expected interval between heartbeats in seconds
 
@@ -16,13 +19,11 @@ class Heartbeat:
     
     async def start_consumer(self):
         """Initialize and start the Kafka consumer for heartbeat messages."""
-        loop = asyncio.get_event_loop()
         self.consumer = AIOKafkaConsumer(
-            'heartbeat',  # Topic name
-            loop=loop,
-            bootstrap_servers='localhost:9092',
+            'heartbeat',
+            bootstrap_servers=KAFKA_BROKERS,
             group_id='heartbeat-consumer-group',
-            auto_offset_reset='earliest'  # Start reading messages from the earliest
+            auto_offset_reset='earliest'
         )
         await self.consumer.start()  # Start the Kafka consumer
         print("Heartbeat consumer started...")

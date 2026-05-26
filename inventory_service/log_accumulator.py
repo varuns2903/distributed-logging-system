@@ -1,9 +1,12 @@
 from fluent import sender
+import os
 
 class Logger1:
     def __init__(self, reg=None, heartbeat=None, logs=None):
         self.logger = sender.FluentSender(
-            "fluentd.inventory_service", host="localhost", port=9880
+            "fluentd.inventory_service",
+            host=os.environ.get('FLUENTD_HOST', 'localhost'),
+            port=int(os.environ.get('FLUENTD_PORT', 9880))
         )
 
         if reg:

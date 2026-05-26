@@ -1,5 +1,6 @@
 from elasticsearch import AsyncElasticsearch
 from datetime import datetime, timedelta, timezone
+import os
 
 
 class NodeStatusManager:
@@ -7,7 +8,8 @@ class NodeStatusManager:
     A class to manage node status in Elasticsearch.
     """
 
-    def __init__(self, es_host: str = "http://localhost:9200", index_name: str = "node_status"):
+    def __init__(self, es_host: str = None, index_name: str = "node_status"):
+        es_host = es_host or os.environ.get('ES_HOST', 'http://localhost:9200')
         """
         Initialize the NodeStatusManager.
 
